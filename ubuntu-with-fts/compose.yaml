@@ -1,0 +1,29 @@
+services:
+  mssql-server:
+    image: name of this soon to be image
+    container_name: mssql-server
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=JoeMontana2024
+      - MSSQL_AGENT_ENABLED=True
+    volumes:
+      - sqlvolume:/var/opt/mssql
+      - ./sqlserverconfig/shell-scripts:/usr/config
+      - ./sqlserverconfig/sql-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "1433:1433"
+
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "JoeMontana2024" -Q "SELECT 1" || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+    entrypoint: ["/bin/bash", "-c"]
+
+    command: "/usr/config/entrypoint.sh"
+
+
+volumes:
+  sqlvolume:
