@@ -33,7 +33,7 @@ namespace SqlServerTests
             await StartRegistryAsync();
 
             // Build the image
-            await BuildImageAsync();
+            await BuildImageAsync(_dockerClient);
 
             // Remove any existing container with the same name
             var containers = await _dockerClient.Containers.ListContainersAsync(new ContainersListParameters { });
@@ -91,6 +91,16 @@ namespace SqlServerTests
 
         private async Task StartRegistryAsync()
         {
+
+
+            // Pull the registry image
+            await _dockerClient.Images.CreateImageAsync(new ImagesCreateParameters
+            {
+                FromImage = RegistryImage,
+            }, null, new Progress<JSONMessage>());
+
+
+
             // Remove any existing registry container
             var containers = await _dockerClient.Containers.ListContainersAsync(new ContainersListParameters { All = true });
             var existingRegistry = containers.FirstOrDefault(c => c.Names.Contains($"/{RegistryContainerName}"));
@@ -108,7 +118,7 @@ namespace SqlServerTests
                 {
                     PortBindings = new Dictionary<string, IList<PortBinding>>
                     {
-                        { "5000/tcp", new List<PortBinding> { new PortBinding { HostPort = RegistryPort.ToString() } } }
+                        { "5000/tcp", new List<PortBinding> { new PortBinding { HostPort = "5001" } } }
                     }
                 }
             });
@@ -116,46 +126,94 @@ namespace SqlServerTests
             await _dockerClient.Containers.StartContainerAsync(RegistryContainerName, new ContainerStartParameters());
         }
 
-        private async Task BuildImageAsync()
+
+        private static async Task BuildImageAsync(DockerClient client)
         {
-            var buildContextPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..");
-            var tarballPath = Path.Combine(Path.GetTempPath(), "docker-build-context.tar");
-
-            CreateTarball(buildContextPath, tarballPath);
-
-            using (var tarStream = new MemoryStream(File.ReadAllBytes(tarballPath)))
+            try
             {
-                var buildParameters = new ImageBuildParameters
-                {
-                    Dockerfile = "Dockerfile",
-                    Tags = new List<string> { ImageName }
-                };
+                // Step 1: Define build context
+                var buildContextPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".."));
+                Console.WriteLine($"Resolved Build Context Path: {buildContextPath}");
 
-                var progress = new Progress<JSONMessage>(message =>
+                if (!Directory.Exists(buildContextPath))
                 {
-                    if (!string.IsNullOrWhiteSpace(message.Stream))
+                    throw new DirectoryNotFoundException($"Build context directory not found: {buildContextPath}");
+                }
+
+                // Step 2: Create tarball archive
+                var tarballPath = Path.Combine(Path.GetTempPath(), "docker-build-context.tar");
+                CreateTarball(buildContextPath, tarballPath);
+                Console.WriteLine($"Tarball created at: {tarballPath}");
+
+                using (var tarStream = new MemoryStream(File.ReadAllBytes(tarballPath)))
+                {
+                    // Step 3: Extract tarball to locate Dockerfile
+                    var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    Directory.CreateDirectory(tempDir);
+
+                    using (var extractedArchive = SharpCompress.Archives.ArchiveFactory.Open(tarStream))
                     {
-                        Console.WriteLine(message.Stream.Trim());
+                        foreach (var entry in extractedArchive.Entries.Where(entry => !entry.IsDirectory))
+                        {
+                            entry.WriteToDirectory(tempDir, new SharpCompress.Common.ExtractionOptions
+                            {
+                                ExtractFullPath = true,
+                                Overwrite = true
+                            });
+                        }
                     }
-                });
 
-                tarStream.Seek(0, SeekOrigin.Begin);
+                    // Step 4: Find the Dockerfile
+                    var dockerfilePath = Directory.GetFiles(tempDir, "Dockerfile", SearchOption.AllDirectories).FirstOrDefault();
+                    if (dockerfilePath == null)
+                    {
+                        throw new FileNotFoundException($"Dockerfile not found in build context: {buildContextPath}");
+                    }
 
-                await _dockerClient.Images.BuildImageFromDockerfileAsync(
-                    buildParameters,
-                    tarStream,
-                    null,
-                    new Dictionary<string, string>(),
-                    progress,
-                    CancellationToken.None
-                );
+                    // Step 5: Reset tarStream and prepare build parameters
+                    tarStream.Seek(0, SeekOrigin.Begin);
+
+                    var buildParameters = new ImageBuildParameters
+                    {
+                        Dockerfile = dockerfilePath.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar).Replace("\\", "/"),
+                        Tags = new List<string> { ImageName }
+                    };
+
+                    Console.WriteLine("Starting image build...");
+                    var progress = new Progress<JSONMessage>(message =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(message.Stream))
+                        {
+                            Console.WriteLine(message.Stream.Trim());
+                        }
+                    });
+
+                    // Step 6: Build the Docker image
+                    await client.Images.BuildImageFromDockerfileAsync(
+                        buildParameters,
+                        tarStream,
+                        null,
+                        new Dictionary<string, string>(),
+                        progress,
+                        CancellationToken.None
+                    );
+
+                    Console.WriteLine($"Image {ImageName} built successfully.");
+                }
+
+                // Step 7: Clean up temporary files
+                if (File.Exists(tarballPath))
+                {
+                    File.Delete(tarballPath);
+                }
             }
-
-            if (File.Exists(tarballPath))
+            catch (Exception ex)
             {
-                File.Delete(tarballPath);
+                Console.WriteLine($"Error during image build: {ex.Message}");
+                throw;
             }
         }
+
 
         private static void CreateTarball(string sourceDirectory, string tarballPath)
         {
