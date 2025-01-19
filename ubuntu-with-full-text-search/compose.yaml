@@ -1,8 +1,11 @@
 services:
   mssql-server:
-    image: localhost:5001/sql-server-full-text-search
+    # image: localhost:5001/sql-server-full-text-search
     container_name: mssql-server
     restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=YourStrong!Password
