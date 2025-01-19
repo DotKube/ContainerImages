@@ -30,7 +30,7 @@ namespace SqlServerTests
             _dockerClient = CreateDockerClient();
 
             // Start the Docker registry
-            await StartRegistryAsync();
+            // await StartRegistryAsync();
 
             // Build the image
             await BuildImageAsync(_dockerClient);
@@ -91,48 +91,52 @@ namespace SqlServerTests
 
         private async Task StartRegistryAsync()
         {
+            Console.WriteLine("Starting Docker registry...");
 
-
-            // Pull the registry image
-            await _dockerClient.Images.CreateImageAsync(new ImagesCreateParameters
+            IList<ContainerListResponse> containers = await _dockerClient.Containers.ListContainersAsync(
+            new ContainersListParameters()
             {
-                FromImage = RegistryImage,
-            }, null, new Progress<JSONMessage>());
+                Limit = 10,
+            })
+            .ConfigureAwait(false);
 
-
-
-            // Remove any existing registry container
-            var containers = await _dockerClient.Containers.ListContainersAsync(new ContainersListParameters { All = true });
-            var existingRegistry = containers.FirstOrDefault(c => c.Names.Contains($"/{RegistryContainerName}"));
-            if (existingRegistry != null)
+            foreach (var container in containers)
             {
-                await _dockerClient.Containers.RemoveContainerAsync(existingRegistry.ID, new ContainerRemoveParameters { Force = true });
+                Console.WriteLine(JsonSerializer.Serialize(container));
             }
 
             // Create and start the registry container
-            await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
-            {
-                Name = RegistryContainerName,
-                Image = RegistryImage,
-                HostConfig = new HostConfig
-                {
-                    PortBindings = new Dictionary<string, IList<PortBinding>>
-                    {
-                        { "5000/tcp", new List<PortBinding> { new PortBinding { HostPort = "5001" } } }
-                    }
-                }
-            });
+            Console.WriteLine("Creating and starting Docker registry container...");
+            // await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
+            // {
+            //     Name = RegistryContainerName,
+            //     Image = RegistryImage,
+
+            //     HostConfig = new HostConfig
+            //     {
+            //         PortBindings = new Dictionary<string, IList<PortBinding>>
+            // {
+            //     { "5000/tcp", new List<PortBinding> { new PortBinding { HostPort = "5001" } } }
+            // }
+            //     }
+            // });
 
             await _dockerClient.Containers.StartContainerAsync(RegistryContainerName, new ContainerStartParameters());
+            Console.WriteLine("Docker registry started on port 5001.");
         }
+
 
 
         private static async Task BuildImageAsync(DockerClient client)
         {
+
+            Console.WriteLine("Building Docker image...");
+
             try
             {
                 // Step 1: Define build context
-                var buildContextPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".."));
+                var sourcePath = AppDomain.CurrentDomain.BaseDirectory;
+                var buildContextPath = Path.GetFullPath(Path.Combine(sourcePath, "..", "..", "..", "..", ".."));
                 Console.WriteLine($"Resolved Build Context Path: {buildContextPath}");
 
                 if (!Directory.Exists(buildContextPath))
