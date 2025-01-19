@@ -1,0 +1,38 @@
+
+
+version: "3"
+
+
+
+tasks:
+  default:
+    desc: "List all available tasks"
+    cmds:
+      - go-task --list
+
+  build:
+    desc: "Build the container"
+    cmds:
+      - docker compose build
+  
+  up:
+    desc: "Start the container"
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: "Stop the container"
+    cmds:
+      - docker compose down -v
+
+  logs:
+    desc: "Show container logs"
+    cmds:
+      - docker compose logs
+  
+  delete-image:
+    desc: "Delete the container image"
+    ignore_error: true
+    cmds:
+      - task: down
+      - docker rmi ubuntu-with-full-text-search_mssql-server
