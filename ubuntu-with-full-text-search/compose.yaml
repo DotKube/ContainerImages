@@ -1,9 +1,7 @@
 services:
   mssql-server:
+    image: localhost:5001/sql-server-full-text-search
     container_name: mssql-server
-    build:
-      context: .
-      dockerfile: containerfile
     restart: unless-stopped
     environment:
       - ACCEPT_EULA=Y

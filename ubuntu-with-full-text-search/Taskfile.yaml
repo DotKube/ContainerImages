@@ -1,8 +1,4 @@
-
-
 version: "3"
-
-
 
 tasks:
   default:
@@ -36,3 +32,10 @@ tasks:
     cmds:
       - task: down
       - docker rmi ubuntu-with-full-text-search_mssql-server
+
+
+  test:
+    desc: "Run the test"
+    dir: "./tests/ubuntu-with-full-text-search-tests"
+    cmds:
+      - dotnet test
