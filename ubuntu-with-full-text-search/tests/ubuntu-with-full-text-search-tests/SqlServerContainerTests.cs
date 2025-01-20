@@ -22,8 +22,8 @@ namespace SqlServerTests
         private const int RegistryPort = 5001;
         private const string ImageName = "localhost:5001/sql-server-full-text-search:latest";
         private const string ContainerName = "mssql-server-test";
-        private const string SaPassword = "YourStrong!Password";
-        private readonly string _connectionString = "Server=127.0.0.1,1433;Database=master;User Id=sa;Password=YourStrong!Password;TrustServerCertificate=true;Encrypt=false";
+        private const string SaPassword = "ReallyStrongPassword123!#";
+        private readonly string _connectionString = "Server=127.0.0.1,1433;Database=master;User Id=sa;Password=ReallyStrongPassword123!#;TrustServerCertificate=true;Encrypt=false";
 
         public async Task InitializeAsync()
         {
@@ -35,8 +35,17 @@ namespace SqlServerTests
             // Build the image
             await BuildImageAsync(_dockerClient);
 
+            Console.WriteLine("Built Docker image.");
+
             // Remove any existing container with the same name
             var containers = await _dockerClient.Containers.ListContainersAsync(new ContainersListParameters { });
+
+            Console.WriteLine("Existing containers: ");
+            foreach (var container in containers)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(container));
+            }
+
             foreach (var container in containers.Where(c => c.Names.Any(name => name.Contains(ContainerName))))
             {
                 await _dockerClient.Containers.RemoveContainerAsync(container.ID, new ContainerRemoveParameters { Force = true });
