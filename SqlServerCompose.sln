@@ -1,0 +1,32 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ubuntu-with-full-text-search", "ubuntu-with-full-text-search", "{9B41851C-91C7-1DD8-0F21-1C2C6B6AADF0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7F1792D1-25D6-B527-05A1-AB57A6B2C2BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ubuntu-with-full-text-search-tests", "ubuntu-with-full-text-search\tests\ubuntu-with-full-text-search-tests\ubuntu-with-full-text-search-tests.csproj", "{B443840D-177F-DCED-85CB-6906AE4FE0CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B443840D-177F-DCED-85CB-6906AE4FE0CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B443840D-177F-DCED-85CB-6906AE4FE0CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B443840D-177F-DCED-85CB-6906AE4FE0CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B443840D-177F-DCED-85CB-6906AE4FE0CD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7F1792D1-25D6-B527-05A1-AB57A6B2C2BD} = {9B41851C-91C7-1DD8-0F21-1C2C6B6AADF0}
+		{B443840D-177F-DCED-85CB-6906AE4FE0CD} = {7F1792D1-25D6-B527-05A1-AB57A6B2C2BD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {80E137B2-7D4B-48D7-8027-8852E7E5E900}
+	EndGlobalSection
+EndGlobal
