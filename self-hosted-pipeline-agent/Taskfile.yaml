@@ -1,0 +1,32 @@
+
+
+
+version: '3'
+
+tasks:
+    
+  create-env:
+    cmds:
+      - cp sample.env .env
+      - echo "Environment file created successfully! Fill in the required values in the .env file."
+
+  build-image:
+    cmds:
+      - docker compose build
+
+  push-image:
+    cmds:
+      - docker compose push
+  
+  run:
+    cmds:
+      - docker compose up -d
+
+
+  logs:
+    cmds:
+      - docker compose logs -f
+  
+  down:
+    cmds:
+      - docker compose down

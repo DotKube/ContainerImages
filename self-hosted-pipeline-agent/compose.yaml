@@ -1,0 +1,13 @@
+
+version: '3.8'
+
+services:
+  azp-agent:
+    image: <your-registry>/azp-agent:latest
+    container_name: azp-agent-linux
+    build: .
+    env_file:
+      - path: ./.env
+        required: true
+    restart: unless-stopped
+    privileged: true
