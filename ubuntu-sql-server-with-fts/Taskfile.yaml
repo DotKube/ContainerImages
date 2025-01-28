@@ -4,7 +4,7 @@ tasks:
   default:
     desc: "List all available tasks"
     cmds:
-      - go-task --list
+      - task --list
 
   build:
     desc: "Build the container"
