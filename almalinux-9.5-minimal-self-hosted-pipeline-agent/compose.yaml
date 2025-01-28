@@ -3,7 +3,7 @@ version: '3.8'
 
 services:
   azp-agent:
-    image: <your-registry>/azp-agent:latest
+    image: ghcr.io/dotkube/self-hosted-azp-agent:almalinux-9.5-minimal
     container_name: azp-agent-linux
     build: .
     env_file:
